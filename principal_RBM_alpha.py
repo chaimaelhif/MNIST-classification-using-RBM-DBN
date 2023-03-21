@@ -41,7 +41,7 @@ class RBM:
             np.random.shuffle(x_copy)
 
             for batch in range(0, x.shape[0], batch_size):
-                x_batch = x_copy[batch : min(batch + batch_size, x.shape[0]), :]
+                x_batch = x_copy[batch: min(batch + batch_size, x.shape[0]), :]
 
                 v0 = x_batch
                 p_h_0 = self.entree_sortie_rbm(v0)
