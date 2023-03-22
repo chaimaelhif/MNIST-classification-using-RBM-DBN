@@ -12,17 +12,6 @@ def logit(z):
     return np.log(z / (1 - z))
 
 
-def lire_alpha_digit(df, index_digit):
-    df = df[index_digit, :]
-    df_bad = np.zeros((df.size, df[0, 0].size))
-    k = 0  # image index
-    for i in range(df.shape[0]):
-        for j in range(df.shape[1]):
-            df_bad[k, :] = df[i, j].flatten()
-            k += 1
-    return df_bad
-
-
 class RBM:
     def __init__(self, num_visible=p, num_hidden=10, mu=0, sigma=0.1):
         self.a = np.zeros(num_visible)
