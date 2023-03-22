@@ -8,8 +8,8 @@ def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
 
-def logit(p):
-    return np.log(p / (1 - p))
+def logit(z):
+    return np.log(z / (1 - z))
 
 
 def lire_alpha_digit(df, index_digit):
@@ -24,10 +24,10 @@ def lire_alpha_digit(df, index_digit):
 
 
 class RBM:
-    def __init__(self, p, q, mu=0, sigma=0.1):
-        self.a = np.zeros(p)
-        self.b = np.zeros(q)
-        self.W = np.random.normal(mu, sigma, size=(p, q))
+    def __init__(self, num_visible=p, num_hidden=10, mu=0, sigma=0.1):
+        self.a = np.zeros(num_visible)
+        self.b = np.zeros(num_hidden)
+        self.W = np.random.normal(mu, sigma, size=(num_visible, num_hidden))
 
     def entree_sortie_rbm(self, v):
         return sigmoid(self.b + sum(np.dot(v, self.W)))
@@ -35,15 +35,17 @@ class RBM:
     def sortie_entree_rbm(self, h):
         return sigmoid(self.a + sum(np.dot(h, self.W.T)))
 
-    def train_rbm(self, x, epochs=100, learning_rate=0.1, batch_size=100):
-        for i in range(epochs):
-            x_copy = x.copy()
-            np.random.shuffle(x_copy)
+    def train_rbm(self, data, epochs=100, learning_rate=0.1, batch_size=100):
+        for epoch in range(epochs):
+            data_copy = data.copy()
+            np.random.shuffle(data_copy)
 
-            for batch in range(0, x.shape[0], batch_size):
-                x_batch = x_copy[batch: min(batch + batch_size, x.shape[0]), :]
+            for batch in range(0, data.shape[0], batch_size):
+                data_batch = data_copy[
+                    batch : min(batch + batch_size, data.shape[0]), :
+                ]
 
-                v0 = x_batch
+                v0 = data_batch
                 p_h_0 = self.entree_sortie_rbm(v0)
                 h_0 = np.random.binomial(1, p_h_0)
                 p_v_1 = self.sortie_entree_rbm(h_0)
@@ -58,11 +60,10 @@ class RBM:
                 self.a += learning_rate / batch_size * grad_a
                 self.b += learning_rate / batch_size * grad_b
 
-            h_epoch = np.random.binomial(1, self.entree_sortie_rbm(x))
-            x_rec = np.random.binomial(1, self.sortie_entree_rbm(h_epoch))
-            mse = np.sum((x_rec - x) ** 2) / x.shape[0]
-            print(f"Epoch({i}): mse={round(mse, 2)}")
-
+            h_epoch = np.random.binomial(1, self.entree_sortie_rbm(data))
+            data_rec = np.random.binomial(1, self.sortie_entree_rbm(h_epoch))
+            mse = np.sum((data_rec - data) ** 2) / data.shape[0]
+            print(f"Epoch {epoch+1}/{epochs} - Error: {mse:.4f}")
         return self
 
     def generate_image_rbm(self, nb_data=1, nb_gibbs=100):
@@ -75,9 +76,11 @@ class RBM:
 
             images[data, :] = v
 
-            # Plot the generated images
-            plt.figure()
-            for i in range(len(images)):
-                plt.plot(images[i, :].reshape((x_im, y_im)), cmap="gray")
-
+        # Reshape and Plot the generated images
+        fig, axes = plt.subplots(1, nb_data, figsize=(10, 2))
+        images = images.reshape((nb_data, x_im, y_im))
+        for i in range(nb_data):
+            axes[i].imshow(images[i], cmap="gray")
+            axes[i].axis("off")
+        plt.show()
         return images
