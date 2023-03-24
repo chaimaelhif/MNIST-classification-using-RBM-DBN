@@ -1,45 +1,47 @@
 import numpy as np
+import pandas as pd
 from sklearn.utils import shuffle
 
 from principal_DBN_alpha import DBN
-from principal_RBM_alpha import RBM, sigmoid
-
-global n, p, x_im, y_im
+from principal_RBM_alpha import RBM
 
 
 def sigmoid_prime(z):
-    return sigmoid(z) * (1 - sigmoid(z))
+    return z * (1 - z)
 
 
 def calcul_softmax(rbm: RBM, data):
-    z = rbm.entree_sortie_rbm(data)
+    vdn = np.dot(data, rbm.W)
+    z = rbm.b + np.dot(data, rbm.W)
     return np.exp(z) / np.sum(np.exp(z), axis=1, keepdims=True)
 
 
 class DNN:
-    def __init__(self, config=(p, 100, 50, 100, 10)):
+    def __init__(self, config):
         self.config: tuple = config
         self.num_layers: int = len(self.config)
 
         # un DNN est un DBN avec une couche de classification supplémentaire
         # dernier RBM du DBN pour la classification → on ne définit pas "rbm.a".
-        self.dnn = DBN(config)
+        self.dbn = DBN(config)
+        self.classification = RBM(config[-1], 10)
 
     def pretrain_dnn(
             self, data, epochs=100, learning_rate=0.1, batch_size=100
     ):
-        self.dnn.train_dbn(data, epochs, learning_rate, batch_size)
+        self.dbn.train_dbn(data, epochs, learning_rate, batch_size)
         return self
 
     def entree_sortie_network(self, data):
         v = data.copy()
         results = [v]  # Couche d'entrée
-        for i in range(self.num_layers - 1):
-            v = self.dnn.dbn[i].entree_sortie_rbm(v)
+        for i in range(self.num_layers-1):
+            p_h = self.dbn.dbn[i].entree_sortie_rbm(v)
+            v = np.random.binomial(1, p_h)
             results.append(v)
 
         # Compute the probabilities
-        softmax_probas = calcul_softmax(self.dnn.dbn[self.num_layers - 1], v)
+        softmax_probas = calcul_softmax(self.classification, v)
         results.append(softmax_probas)
         return results
 
@@ -50,7 +52,7 @@ class DNN:
 
         for epoch in range(epochs):
             data_copy = data.copy()
-            labels_copy = labels.copy()
+            labels_copy = pd.get_dummies(labels.copy())
             data_copy, labels_copy = shuffle(data_copy, labels_copy)
 
             for batch in range(0, data.shape[0], batch_size):
@@ -58,7 +60,7 @@ class DNN:
                     batch: min(batch + batch_size, data.shape[0]), :
                 ]
                 labels_batch = labels_copy[
-                    batch: min(batch + batch_size, data.shape[0]), :
+                    batch: min(batch + batch_size, data.shape[0])
                 ]
                 # Forward pass
                 activations = self.entree_sortie_network(data_batch)
@@ -66,24 +68,30 @@ class DNN:
                 # Backward pass
                 # Start with last layer
                 delta = activations[-1] - labels_batch
-                grad_w = np.dot(activations[-2].T, delta)
-                grad_b = np.sum(delta, axis=0)
-                self.dnn.dbn[-1].W -= learning_rate * grad_w
-                self.dnn.dbn[-1].b -= learning_rate * grad_b
+                grad_w = np.dot(activations[-2].T, delta)/batch_size
+                grad_b = np.mean(delta, axis=0)
+                self.classification.W -= learning_rate * grad_w
+                self.classification.b -= learning_rate * grad_b
 
                 # Propagate error backwards through hidden layers
-                for layer in range(2, self.num_layers):
-                    delta = np.dot(delta,
-                                   self.dnn.dbn[-layer + 1].W.T
-                                   ) * sigmoid_prime(activations[-layer])
-                    grad_w = np.dot(activations[-layer - 1].T, delta)
-                    grad_b = np.sum(delta, axis=0)
-                    self.dnn.dbn[-layer].W -= learning_rate * grad_w
-                    self.dnn.dbn[-layer].b -= learning_rate * grad_b
+                for layer in range(1, self.num_layers):
+                    if layer == 1:
+                        delta = np.dot(delta,
+                                       self.classification.W.T
+                                       ) * sigmoid_prime(activations[-layer-1])
+                    else:
+                        delta = np.dot(delta,
+                                       self.dbn.dbn[-layer + 1].W.T
+                                       ) * sigmoid_prime(activations[-layer-1])
+                    grad_w = np.dot(activations[-layer - 2].T, delta)/batch_size
+                    grad_b = np.mean(delta, axis=0)
+                    self.dbn.dbn[-layer].W -= learning_rate * grad_w
+                    self.dbn.dbn[-layer].b -= learning_rate * grad_b
 
                 # Compute training accuracy and cross-entropy loss
+                c = pd.from_dummies(labels_batch)
                 train_acc = np.mean(
-                    np.argmax(activations[-1], axis=1) == labels_batch
+                    np.argmax(activations[-1], axis=1).reshape(-1,1) == c
                 )
                 train_loss = -np.mean(
                     np.sum(labels_batch * np.log(activations[-1]), axis=1)
@@ -95,7 +103,7 @@ class DNN:
                 np.argmax(test_activations[-1], axis=1) == labels
             )
             test_loss = -np.mean(
-                np.sum(labels * np.log(test_activations[-1]), axis=1)
+                np.sum(labels_copy * np.log(test_activations[-1]), axis=1)
             )
 
             # Print progress
