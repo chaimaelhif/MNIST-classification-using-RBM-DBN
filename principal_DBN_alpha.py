@@ -3,11 +3,9 @@ import numpy as np
 
 from principal_RBM_alpha import RBM
 
-global n, p, x_im, y_im
-
 
 class DBN:
-    def __init__(self, config=(p, 100, 50, 100)):
+    def __init__(self, config):
         self.config: tuple = config
         self.dbn: [RBM] = []
         for i in range(len(config) - 1):
@@ -26,16 +24,17 @@ class DBN:
             data = np.random.binomial(1, self.dbn[i].entree_sortie_rbm(data))
         return self
 
-    def generate_image_dbn(self, nb_data, nb_gibbs):
-        v = self.dbn[-1].generate_image_rbm(nb_data, nb_gibbs)
-        for i in range(len(self.config) - 1, -1):
-            v = np.random.binomial(1, self.dbn[i].sortie_entree_rbm(v))
+    def generate_image_dbn(self, x_im, y_im, nb_data=1, nb_gibbs=100, plot=False):
+        v = self.dbn[-1].generate_image_rbm(x_im, y_im, nb_data, nb_gibbs)
+        for i in range(2, len(self.config)):
+            v = np.random.binomial(1, self.dbn[-i].sortie_entree_rbm(v))
 
-        # Reshape and Plot generated images
         images = v.reshape((nb_data, x_im, y_im))
-        fig, axes = plt.subplots(1, nb_data, figsize=(10, 2))
-        for i in range(nb_data):
-            axes[i].imshow(images[i], cmap="gray")
-            axes[i].axis("off")
-        plt.show()
+        if plot:
+            # Reshape and Plot generated images
+            fig, axes = plt.subplots(1, nb_data, figsize=(10, 2))
+            for i in range(nb_data):
+                axes[i].imshow(images[i], cmap="gray")
+                axes[i].axis("off")
+            plt.show()
         return images
