@@ -15,10 +15,12 @@ class DBN:
     def train_dbn(self, data, epochs=100, learning_rate=0.1, batch_size=100):
         for i in range(len(self.config) - 1):
             print("Pre-training RBM %d..." % i)
-            self.dbn[i] = self.dbn[i].train_rbm(data=data,
-                                                epochs=epochs,
-                                                learning_rate=learning_rate,
-                                                batch_size=batch_size)
+            self.dbn[i] = self.dbn[i].train_rbm(
+                data=data,
+                epochs=epochs,
+                learning_rate=learning_rate,
+                batch_size=batch_size,
+            )
 
             # Calcul des sorties de l'i-ème RBM pour les données d'entrée
             data = np.random.binomial(1, self.dbn[i].entree_sortie_rbm(data))
