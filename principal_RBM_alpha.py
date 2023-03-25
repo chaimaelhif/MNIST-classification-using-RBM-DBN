@@ -12,9 +12,15 @@ def logit(z):
 
 class RBM:
     def __init__(self, num_visible, num_hidden=10, mu=0, sigma=0.1):
-        self.a = np.zeros(num_visible)
-        self.b = np.zeros(num_hidden)
-        self.W = np.random.normal(mu, sigma, size=(num_visible, num_hidden))
+        """
+        :param num_visible: number of neurons in visible layer
+        :param num_hidden: number of neurons in the hidden layer
+        :param mu: mean of the random variable to initialize Weights W
+        :param sigma: std of the random variable to initialize Weights W
+        """
+        self.a: np.array = np.zeros(num_visible)
+        self.b: np.array = np.zeros(num_hidden)
+        self.W: np.array = np.random.normal(mu, sigma, size=(num_visible, num_hidden))
 
     def entree_sortie_rbm(self, v):
         return sigmoid(self.b + np.dot(v, self.W))
@@ -22,7 +28,9 @@ class RBM:
     def sortie_entree_rbm(self, h):
         return sigmoid(self.a + np.dot(h, self.W.T))
 
-    def train_rbm(self, data, epochs=100, learning_rate=0.1, batch_size=100, early_stopping=5):
+    def train_rbm(
+        self, data, epochs=100, learning_rate=0.1, batch_size=100, early_stopping=5
+    ):
         keep_track = 0
         mse = 100
         for epoch in range(epochs):
@@ -31,7 +39,7 @@ class RBM:
 
             for batch in range(0, data.shape[0], batch_size):
                 data_batch = data_copy[
-                    batch: min(batch + batch_size, data.shape[0]), :
+                    batch : min(batch + batch_size, data.shape[0]), :
                 ]
 
                 v0 = data_batch
@@ -54,10 +62,10 @@ class RBM:
             previous_mse = mse
             mse = np.sum((data_rec - data) ** 2) / data.size
 
-            if keep_track < early_stopping and mse == previous_mse:
+            if keep_track < early_stopping and round(mse, 3) == round(previous_mse, 3):
                 keep_track += 1
             elif keep_track == early_stopping:
-                break
+                return self
             print(f"Epoch {epoch+1}/{epochs} - Error: {mse:.3f}")
 
         return self
