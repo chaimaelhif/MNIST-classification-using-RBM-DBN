@@ -6,6 +6,9 @@ from principal_RBM_alpha import RBM
 
 class DBN:
     def __init__(self, config):
+        """
+        :param config: configuration of the DBN
+        """
         self.config: tuple = config
         self.dbn: [RBM] = []
         for i in range(len(config) - 1):
