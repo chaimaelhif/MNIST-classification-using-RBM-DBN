@@ -48,18 +48,15 @@ def import_model(filename: str) -> DNN:
     :param filename: file path
     :return: trained model
     """
-    with open(filename, "rb") as file:
+    with open("models/"+filename, "rb") as file:
         model = pickle.load(file)
-        if model.fitted:
-            return model
-        else:
-            raise ValueError("This model is not fitted")
+        return model
 
 
-def save_model(filename: str, model: DNN):
+def save_model(filename: str, model):
     """
     :param filename: file path
     :param model: trained model to save
     """
-    with open(filename, "wb") as file:
+    with open("models/"+filename, "wb") as file:
         pickle.dump(model, file)
