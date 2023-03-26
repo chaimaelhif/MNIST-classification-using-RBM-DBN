@@ -1,6 +1,6 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from sklearn.utils import shuffle
 
 from principal_DBN_alpha import DBN
@@ -17,16 +17,20 @@ def calcul_softmax(rbm: RBM, data):
 
 
 class DNN:
-    def __init__(self, config, output_dim=10, pretrain=False):
+    def __init__(self, config, output_dim=10):
+        """
+        :param config: configuration of the DBN
+        :param output_dim: dimension of the output
+        """
         self.config: tuple = config
-        self.num_layers: int = len(self.config)
+        self.num_layers: int = len(self.config)  # number of layers except output
 
         # un DNN est un DBN avec une couche de classification supplémentaire
         # dernier RBM du DBN pour la classification → on ne définit pas "rbm.a".
         self.dbn: DBN = DBN(config)
         self.classification: RBM = RBM(config[-1], output_dim)
-        self.pretrained: bool = pretrain
-        self.fitted: bool = False
+        self.pretrained: bool = False  # check if model is pretrained
+        self.fitted: bool = False  # check if model is fitted
 
     def pretrain_dnn(self, data, epochs=100, learning_rate=0.1, batch_size=100):
         self.dbn.train_dbn(data, epochs, learning_rate, batch_size)
