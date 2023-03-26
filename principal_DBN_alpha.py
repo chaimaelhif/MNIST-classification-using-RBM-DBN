@@ -41,5 +41,6 @@ class DBN:
             for i in range(nb_data):
                 axes[i].imshow(images[i], cmap="gray")
                 axes[i].axis("off")
+            plt.suptitle(f"The config considered {self.config}")
             plt.show()
         return images
