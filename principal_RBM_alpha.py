@@ -39,7 +39,7 @@ class RBM:
 
             for batch in range(0, data.shape[0], batch_size):
                 data_batch = data_copy[
-                    batch : min(batch + batch_size, data.shape[0]), :
+                    batch: min(batch + batch_size, data.shape[0]), :
                 ]
 
                 v0 = data_batch
@@ -57,8 +57,8 @@ class RBM:
                 self.a += learning_rate / batch_size * grad_a
                 self.b += learning_rate / batch_size * grad_b
 
-            h_epoch = np.random.binomial(1, self.entree_sortie_rbm(data))
-            data_rec = np.random.binomial(1, self.sortie_entree_rbm(h_epoch))
+            h_epoch = self.entree_sortie_rbm(data)
+            data_rec = self.sortie_entree_rbm(h_epoch)
             previous_mse = mse
             mse = np.sum((data_rec - data) ** 2) / data.size
 
