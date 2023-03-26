@@ -53,9 +53,12 @@ class DNN:
         epochs=100,
         learning_rate=0.1,
         batch_size=100,
+        early_stopping=5,
         verbose=True,
         plot=True,
     ):
+        keep_track = 0
+        train_loss = 100
         loss_batches, loss = [], []
 
         for epoch in range(epochs):
@@ -65,10 +68,10 @@ class DNN:
 
             for batch in range(0, data.shape[0], batch_size):
                 data_batch = data_copy[
-                    batch : min(batch + batch_size, data.shape[0]), :
+                    batch: min(batch + batch_size, data.shape[0]), :
                 ]
                 labels_batch = labels_copy[
-                    batch : min(batch + batch_size, data.shape[0])
+                    batch: min(batch + batch_size, data.shape[0])
                 ]
                 # Forward pass
                 activations = self.entree_sortie_network(data_batch)
@@ -105,8 +108,14 @@ class DNN:
                     self.dbn.dbn[-layer].b -= learning_rate * grad_b
 
             # Compute cross-entropy loss
-            train_loss = np.mean(loss_batches)
+            previous_loss = train_loss
+            train_loss = float(np.mean(loss_batches))
             loss.append(train_loss)
+
+            if keep_track < early_stopping and round(train_loss, 3) == round(previous_loss, 3):
+                keep_track += 1
+            elif keep_track == early_stopping:
+                return self
             # Print progress
             if verbose:
                 print(
@@ -139,9 +148,8 @@ class DNN:
 
     def plot_proba(self, data):
         pred_labels = self.entree_sortie_network(data)[-1]
-        plt.plot(pred_labels)
-        plt.legend()
+        plt.scatter(np.arange(0, 10), pred_labels[0])
         plt.xlabel("Classes")
         plt.ylabel("Predicted probability for each class")
-        plt.title("")
+        plt.title("Probabilities by class")
         plt.show()
