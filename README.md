@@ -6,7 +6,7 @@ To reproduce the scores and plots in the report you need to run the main.py file
 
 1. Install the required librairies using "requirements.txt"
 2. Run the main file:
-   1. Use **"--action action"** (action in ["RBM", "DBN", "DNN5.1", "DNN5.2.1", "DNN5.2.2"]) 
+   1. Use **"--action action"** (action in ["RBM", "DBN", "DNN5.1", "DNN5.2.1", "DNN5.2.2", "VAE"]) 
    to specify which questions you want to check 
    2. Use **"--arg1 value"** (value in ["train", "test"])
        - "train" to train a model and save it
