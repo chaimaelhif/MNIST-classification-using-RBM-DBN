@@ -50,7 +50,10 @@ def import_model(filename: str) -> DNN:
     """
     with open(filename, "rb") as file:
         model = pickle.load(file)
-    return model
+        if model.fitted:
+            return model
+        else:
+            raise ValueError("This model is not fitted")
 
 
 def save_model(filename: str, model: DNN):
