@@ -7,6 +7,11 @@ from principal_DNN_MNIST import DNN
 
 
 def lire_alpha_digit(filename: str, indices=None):
+    """
+    :param filename: path to import data
+    :param indices: index of alpha digits we want to use for training
+    :return: array (n, p): n number of sample, p number of pixels
+    """
     mat = sp.io.loadmat(filename, simplify_cells=True)
     bad = mat["dat"][indices, :]
     images = np.zeros((bad.size, bad[0, 0].size))
@@ -20,6 +25,12 @@ def lire_alpha_digit(filename: str, indices=None):
 
 
 def lire_mnist(filename: str, indices: np.ndarray, data_type: str):
+    """
+    :param filename: path to import data
+    :param indices: index of alpha digits we want to use for training
+    :param data_type: "train", "test"
+    :return: array (n, p): n number of sample, p number of pixels
+    """
     mnist_all = sp.io.loadmat(filename, simplify_cells=True)
     key = data_type + "0"
     data_mnist = (mnist_all[key] > 127).astype(int)
@@ -33,11 +44,19 @@ def lire_mnist(filename: str, indices: np.ndarray, data_type: str):
 
 
 def import_model(filename: str) -> DNN:
+    """
+    :param filename: file path
+    :return: trained model
+    """
     with open(filename, "rb") as file:
         model = pickle.load(file)
     return model
 
 
 def save_model(filename: str, model: DNN):
+    """
+    :param filename: file path
+    :param model: trained model to save
+    """
     with open(filename, "wb") as file:
         pickle.dump(model, file)
